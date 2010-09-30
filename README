@@ -24,10 +24,9 @@ USAGE
       -d DLDIR, --downloaddir=DLDIR
                             directory for downloads
       -l LANG, --lang=LANG  language of the video fr, de, en (default: fr)
-      -d --downloaddir=     directory where recordings are saved
       -q QUALITY, --quality=QUALITY
                             quality of the video sd or hd (default: hd)
-      --quiet               do not show output of rtmpdump
+      --verbose             show output of rtmpdump
 
 If you run it without any argument, you enter a simple command line interpreter.
 Here is an example of a session:
