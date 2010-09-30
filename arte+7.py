@@ -132,7 +132,12 @@ class MyCmd(Cmd):
         playlist = []
         for i in arg.split():
             try:
+<<<<<<< HEAD
                 playlist.append(self.results[self.process_num(i)])
+=======
+                video = self.results[self.process_num(i)]
+                play(video, self.options)
+>>>>>>> dc10a8e6b088703171d75fe7ffcc94d1bbdf439f
             except ValueError:
                 print >> stderr, '"%s": wrong argument, must be an integer' % i
                 return
