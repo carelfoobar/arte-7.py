@@ -136,7 +136,7 @@ class MyCmd(Cmd):
     play the chosen videos''' # play() is blocking so we can create a "playlist"
         for i in arg.split():
             try:
-                video = self.results[self.process_num(arg)]
+                video = self.results[self.process_num(i)]
                 play(video, self.options)
             except ValueError:
                 print >> stderr, 'Error: wrong argument "'+str(i)+'" (must be an integer)'
