@@ -47,12 +47,14 @@ PLAYERS = (
 
 CLSID = 'clsid:d27cdb6e-ae6d-11cf-96b8-444553540000'
 # with 50 per page but only get 25 because the rest is done with ajax (?)
-HOME_URL = 'http://videos.arte.tv/%s/videos#/tv/thumb///1/25/'
+HOME_URL = 'http://videos.arte.tv/en/videos'
 SEARCH_URL = 'http://videos.arte.tv/%s/do_search/videos/%s?q='
 SEARCH_LANG = {'fr': 'recherche', 'de':'suche', 'en': 'search'}
 LANG = SEARCH_LANG.keys()
 # same remark as above
 FILTER_URL = 'http://videos.arte.tv/%s/do_delegate/videos/index-3188698,view,asThumbnail.html?hash=tv/thumb///%s/50/'
+CHANNEL_URL = 'http://videos.arte.tv/en/videos/all_videos/index-%s.html'
+PROGRAM_URL = 'http://videos.arte.tv/en/videos/programs/test/index-%s.html'
 
 BOLD   = '[1m'
 NC     = '[0m'    # no color
@@ -228,7 +230,7 @@ class MyCmd(Cmd):
             page = 1
             self.videos = get_list(page, self.options.lang)
         elif self.videos is None:
-            c,p,v = get_channels_programs(self.options.lang)
+            c,p,v = get_channels_programs()
             if c is not None:
                 self.channels = c
                 self.programs = p
@@ -242,7 +244,7 @@ class MyCmd(Cmd):
     display available channels or search video for given channel(s)'''
         if self.channels is None:
             # try to get them from home page
-            c,p,v = get_channels_programs(self.options.lang)
+            c,p,v = get_channels_programs()
             if c is not None:
                 self.channels = c
                 self.programs = p
@@ -260,9 +262,10 @@ class MyCmd(Cmd):
                     if i<0 or i>=len(self.channels):
                         print >> stderr, 'Error: unknown channel #%d.' % (i+1)
                         return
-                videos = channel(ch, self.options.lang, self.channels)
-                print_results(videos)
-                self.results = videos
+                    videos = channel(i, self.channels)
+                    print_results(videos)
+                    self.results = videos
+                    break
             except ValueError:
                 print >> stderr, 'Error: wrong argument; must be an integer'
 
@@ -271,7 +274,7 @@ class MyCmd(Cmd):
     display available programs or search video for given program(s)'''
         if self.programs is None:
             # try to get them from home page
-            c,p,v = get_channels_programs(self.options.lang)
+            c,p,v = get_channels_programs()
             if p is not None:
                 self.programs = p
                 self.channels = c
@@ -289,9 +292,10 @@ class MyCmd(Cmd):
                     if i<0 or i>=len(self.programs):
                         print >> stderr, 'Error: unknown program #%d.' % (i+1)
                         return
-                videos = program(pr, self.options.lang, self.programs)
-                print_results(videos)
-                self.results = videos
+                    videos = program(i, self.programs)
+                    print_results(videos)
+                    self.results = videos
+                    break
             except ValueError:
                 print >> stderr, 'Error: wrong argument; must be an integer'
 
@@ -319,8 +323,8 @@ class MyCmd(Cmd):
     search STRING    search for a video
     lang [fr|de|en]  display or switch to a different language
     quality [sd|hd]  display or switch to a different video quality
-    channel [NUMBER] display available channels or search video for given channel(s)
-    program [NUMBER] display available programs or search video for given program(s)
+    channel [NUMBER] display available channels or search video for given channel
+    program [NUMBER] display available programs or search video for given program
     list [more]      list 25 videos from the home page (list 55 ones with more)
     help             show this help
     quit             quit the cli
@@ -422,11 +426,11 @@ def get_video_player_info(video, options):
     video['player_url'] = p
     video['info'] = i
 
-def get_channels_programs(lang):
+def get_channels_programs():
     '''get channels and programs from home page'''
     try:
         print ':: Retrieving channels and programs'
-        url = HOME_URL % (lang, )
+        url = HOME_URL
         soup = BeautifulSoup(urlopen(url).read(), convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
         #get the channels
         uls = soup.findAll('ul', {'class': 'channelList'})
@@ -458,10 +462,10 @@ def get_channels_programs(lang):
         die("Can't get the home page of arte+7")
     return None
 
-def channel(ch, lang, channels):
+def channel(ch, channels):
     '''get a list of videos for channel ch'''
     try:
-        url = (FILTER_URL % (lang, 1)) + 'channel-'+','.join('%d' % channels[i][1] for i in ch)  + '-program-'
+        url = CHANNEL_URL % channels[ch][1]
         soup = BeautifulSoup(urlopen(url).read(), convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
         videos = extract_videos(soup)
         return videos
@@ -469,10 +473,10 @@ def channel(ch, lang, channels):
         die("Can't complete the requested search")
     return None
 
-def program(pr, lang, programs):
+def program(pr, programs):
     '''get a list of videos for program pr'''
     try:
-        url = (FILTER_URL % (lang, 1)) + 'channel-' + '-program-'+','.join('%d' % programs[i][1] for i in pr)
+        url = PROGRAM_URL % programs[pr][1]
         soup = BeautifulSoup(urlopen(url).read(), convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
         videos = extract_videos(soup)
         return videos
