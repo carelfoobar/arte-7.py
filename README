@@ -26,7 +26,7 @@ USAGE
       -l LANG, --lang=LANG  language of the video fr, de, en (default: fr)
       -q QUALITY, --quality=QUALITY
                             quality of the video sd or hd (default: hd)
-      --verbose             show output of rtmpdump
+      --quiet               don't show output of rtmpdump
 
 If you run it without any argument, you enter a simple command line interpreter.
 Here is an example of a session:

@@ -576,7 +576,7 @@ def make_cmd_args(video, options, streaming=False):
         cmd_args = '--rtmp %s --flv %s --swfVfy %s' % (video['rtmp_url'], output_file, video['player_url'])
     else:
         cmd_args = '--rtmp %s --swfVfy %s' % (video['rtmp_url'], video['player_url'])
-    if not options.verbose:
+    if options.quiet:
         cmd_args += ' --quiet'
 
     if not streaming:
@@ -630,7 +630,7 @@ COMMANDS
             action='store', help='language of the video fr, de, en (default: fr)')
     parser.add_option('-q', '--quality', dest='quality', type='string', default=DEFAULT_QUALITY,
             action='store', help='quality of the video sd or hd (default: hd)')
-    parser.add_option('--verbose', dest='verbose', default=False,
+    parser.add_option('--quiet', dest='quiet', default=False,
             action='store_true', help='show output of rtmpdump')
 
     options, args = parser.parse_args()
