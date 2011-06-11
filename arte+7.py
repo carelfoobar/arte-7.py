@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 # -*- coding: utf8 -*-
 
 #             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
