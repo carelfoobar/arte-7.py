@@ -47,14 +47,14 @@ PLAYERS = (
 
 CLSID = 'clsid:d27cdb6e-ae6d-11cf-96b8-444553540000'
 # with 50 per page but only get 25 because the rest is done with ajax (?)
-HOME_URL = 'http://videos.arte.tv/en/videos'
+HOME_URL = 'http://videos.arte.tv/%s/videos'
 SEARCH_URL = 'http://videos.arte.tv/%s/do_search/videos/%s?q='
 SEARCH_LANG = {'fr': 'recherche', 'de':'suche', 'en': 'search'}
 LANG = SEARCH_LANG.keys()
 # same remark as above
 FILTER_URL = 'http://videos.arte.tv/%s/do_delegate/videos/index-3188698,view,asThumbnail.html?hash=tv/thumb///%s/50/'
-CHANNEL_URL = 'http://videos.arte.tv/en/videos/all_videos/index-%s.html'
-PROGRAM_URL = 'http://videos.arte.tv/en/videos/programs/test/index-%s.html'
+CHANNEL_URL = 'http://videos.arte.tv/%s/videos/all_videos/index-%s.html'
+PROGRAM_URL = 'http://videos.arte.tv/%s/videos/programs/test/index-%s.html'
 
 BOLD   = '[1m'
 NC     = '[0m'    # no color
@@ -230,7 +230,7 @@ class MyCmd(Cmd):
             page = 1
             self.videos = get_list(page, self.options.lang)
         elif self.videos is None:
-            c,p,v = get_channels_programs()
+            c,p,v = get_channels_programs(self.options.lang)
             if c is not None:
                 self.channels = c
                 self.programs = p
@@ -426,11 +426,11 @@ def get_video_player_info(video, options):
     video['player_url'] = p
     video['info'] = i
 
-def get_channels_programs():
+def get_channels_programs(lang):
     '''get channels and programs from home page'''
     try:
         print ':: Retrieving channels and programs'
-        url = HOME_URL
+        url = HOME_URL % lang
         soup = BeautifulSoup(urlopen(url).read(), convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
         #get the channels
         uls = soup.findAll('ul', {'class': 'channelList'})
@@ -465,7 +465,7 @@ def get_channels_programs():
 def channel(ch, channels):
     '''get a list of videos for channel ch'''
     try:
-        url = CHANNEL_URL % channels[ch][1]
+        url = CHANNEL_URL % (lang, channels[ch][1])
         soup = BeautifulSoup(urlopen(url).read(), convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
         videos = extract_videos(soup)
         return videos
@@ -476,7 +476,7 @@ def channel(ch, channels):
 def program(pr, programs):
     '''get a list of videos for program pr'''
     try:
-        url = PROGRAM_URL % programs[pr][1]
+        url = PROGRAM_URL % (lang, programs[pr][1])
         soup = BeautifulSoup(urlopen(url).read(), convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
         videos = extract_videos(soup)
         return videos
