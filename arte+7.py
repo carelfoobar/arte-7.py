@@ -244,7 +244,7 @@ class MyCmd(Cmd):
     display available channels or search video for given channel(s)'''
         if self.channels is None:
             # try to get them from home page
-            c,p,v = get_channels_programs()
+            c,p,v = get_channels_programs(self.options.lang)
             if c is not None:
                 self.channels = c
                 self.programs = p
@@ -262,7 +262,7 @@ class MyCmd(Cmd):
                     if i<0 or i>=len(self.channels):
                         print >> stderr, 'Error: unknown channel #%d.' % (i+1)
                         return
-                    videos = channel(i, self.channels)
+                    videos = channel(i, self.options.lang, self.channels)
                     print_results(videos)
                     self.results = videos
                     break
@@ -274,7 +274,7 @@ class MyCmd(Cmd):
     display available programs or search video for given program(s)'''
         if self.programs is None:
             # try to get them from home page
-            c,p,v = get_channels_programs()
+            c,p,v = get_channels_programs(self.options.lang)
             if p is not None:
                 self.programs = p
                 self.channels = c
@@ -292,7 +292,7 @@ class MyCmd(Cmd):
                     if i<0 or i>=len(self.programs):
                         print >> stderr, 'Error: unknown program #%d.' % (i+1)
                         return
-                    videos = program(i, self.programs)
+                    videos = program(i, self.options.lang, self.programs)
                     print_results(videos)
                     self.results = videos
                     break
@@ -462,7 +462,7 @@ def get_channels_programs(lang):
         die("Can't get the home page of arte+7")
     return None
 
-def channel(ch, channels):
+def channel(ch, lang, channels):
     '''get a list of videos for channel ch'''
     try:
         url = CHANNEL_URL % (lang, channels[ch][1])
@@ -473,7 +473,7 @@ def channel(ch, channels):
         die("Can't complete the requested search")
     return None
 
-def program(pr, programs):
+def program(pr, lang, programs):
     '''get a list of videos for program pr'''
     try:
         url = PROGRAM_URL % (lang, programs[pr][1])
