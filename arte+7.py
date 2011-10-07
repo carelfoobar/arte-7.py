@@ -30,9 +30,9 @@ from optparse import OptionParser
 from cmd import Cmd
 
 VERSION = '0.2.3.3'
-DEFAULT_LANG = 'fr'
+DEFAULT_LANG = 'de'
 QUALITY = ('sd', 'hd')
-DEFAULT_QUALITY = 'hd'
+DEFAULT_QUALITY = 'sd'
 DEFAULT_DLDIR = os.getcwd()
 # You could add your favorite player at the beginning of the PLAYERS tuple
 # It must follow the template:
@@ -47,14 +47,17 @@ PLAYERS = (
 
 CLSID = 'clsid:d27cdb6e-ae6d-11cf-96b8-444553540000'
 # with 50 per page but only get 25 because the rest is done with ajax (?)
-HOME_URL = 'http://videos.arte.tv/en/videos'
+HOME_URL = 'http://videos.arte.tv/%s/videos'
 SEARCH_URL = 'http://videos.arte.tv/%s/do_search/videos/%s?q='
 SEARCH_LANG = {'fr': 'recherche', 'de':'suche', 'en': 'search'}
 LANG = SEARCH_LANG.keys()
 # same remark as above
 FILTER_URL = 'http://videos.arte.tv/%s/do_delegate/videos/index-3188698,view,asThumbnail.html?hash=tv/thumb///%s/50/'
-CHANNEL_URL = 'http://videos.arte.tv/en/videos/all_videos/index-%s.html'
-PROGRAM_URL = 'http://videos.arte.tv/en/videos/programs/test/index-%s.html'
+CHANNEL_URL = 'http://videos.arte.tv/%s/videos/all_videos/index-%s.html'
+PROGRAM_URL = 'http://videos.arte.tv/%s/videos/programs/test/index-%s.html'
+
+#Jugendschutz-String:
+ACCESS_LIMITATION = {'de':'Freigegeben ab 18 Jahren','fr':'Déconseillé au moins de 18 ans'}
 
 BOLD   = '[1m'
 NC     = '[0m'    # no color
@@ -230,7 +233,7 @@ class MyCmd(Cmd):
             page = 1
             self.videos = get_list(page, self.options.lang)
         elif self.videos is None:
-            c,p,v = get_channels_programs()
+            c,p,v = get_channels_programs(self.options.lang)
             if c is not None:
                 self.channels = c
                 self.programs = p
@@ -244,7 +247,7 @@ class MyCmd(Cmd):
     display available channels or search video for given channel(s)'''
         if self.channels is None:
             # try to get them from home page
-            c,p,v = get_channels_programs()
+            c,p,v = get_channels_programs(self.options.lang)
             if c is not None:
                 self.channels = c
                 self.programs = p
@@ -262,7 +265,7 @@ class MyCmd(Cmd):
                     if i<0 or i>=len(self.channels):
                         print >> stderr, 'Error: unknown channel #%d.' % (i+1)
                         return
-                    videos = channel(i, self.channels)
+                    videos = channel(i, self.options.lang, self.channels)
                     print_results(videos)
                     self.results = videos
                     break
@@ -274,7 +277,7 @@ class MyCmd(Cmd):
     display available programs or search video for given program(s)'''
         if self.programs is None:
             # try to get them from home page
-            c,p,v = get_channels_programs()
+            c,p,v = get_channels_programs(self.options.lang)
             if p is not None:
                 self.programs = p
                 self.channels = c
@@ -292,7 +295,7 @@ class MyCmd(Cmd):
                     if i<0 or i>=len(self.programs):
                         print >> stderr, 'Error: unknown program #%d.' % (i+1)
                         return
-                    videos = program(i, self.programs)
+                    videos = program(i, self.options.lang, self.programs)
                     print_results(videos)
                     self.results = videos
                     break
@@ -358,6 +361,7 @@ def die(msg):
     print >> stderr, 'Error: %s. See %s --help' % (msg, argv[0])
     exit(1)
 
+global_objects = [] #EDIT
 def get_rtmp_url(url_page, quality='hd', lang='fr'):
     '''get the rtmp url of the video and player url and info about video and soup'''
     # inspired by the get_rtmp_url from arte7recorder project
@@ -393,8 +397,12 @@ def get_rtmp_url(url_page, quality='hd', lang='fr'):
                 xml_url = videos[lang]
             # second xml file
             soup = BeautifulStoneSoup(urlopen(xml_url).read())
-            # at last the video url
-            rtmp_url = soup.urls.find('url', {'quality': quality}).string
+            global_objects.append(soup) #EDIT
+            if ACCESS_LIMITATION[lang] in soup.find('video').find('name'): #check if video can be accessed now
+                print "This video can only be accessed between 23:00 and 5:00"
+            else:
+                # at last the video url
+                rtmp_url = soup.urls.find('url', {'quality': quality}).string
 
         return (rtmp_url, player_url, info, first_soup)
     except URLError:
@@ -426,11 +434,11 @@ def get_video_player_info(video, options):
     video['player_url'] = p
     video['info'] = i
 
-def get_channels_programs():
+def get_channels_programs(lang):
     '''get channels and programs from home page'''
     try:
         print ':: Retrieving channels and programs'
-        url = HOME_URL
+        url = HOME_URL % lang
         soup = BeautifulSoup(urlopen(url).read(), convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
         #get the channels
         uls = soup.findAll('ul', {'class': 'channelList'})
@@ -462,10 +470,10 @@ def get_channels_programs():
         die("Can't get the home page of arte+7")
     return None
 
-def channel(ch, channels):
+def channel(ch, lang, channels):
     '''get a list of videos for channel ch'''
     try:
-        url = CHANNEL_URL % channels[ch][1]
+        url = CHANNEL_URL % (lang, channels[ch][1])
         soup = BeautifulSoup(urlopen(url).read(), convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
         videos = extract_videos(soup)
         return videos
@@ -473,10 +481,10 @@ def channel(ch, channels):
         die("Can't complete the requested search")
     return None
 
-def program(pr, programs):
+def program(pr, lang, programs):
     '''get a list of videos for program pr'''
     try:
-        url = PROGRAM_URL % programs[pr][1]
+        url = PROGRAM_URL % (lang, programs[pr][1])
         soup = BeautifulSoup(urlopen(url).read(), convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
         videos = extract_videos(soup)
         return videos
