@@ -57,7 +57,7 @@ CHANNEL_URL = 'http://videos.arte.tv/%s/videos/all_videos/index-%s.html'
 PROGRAM_URL = 'http://videos.arte.tv/%s/videos/programs/test/index-%s.html'
 
 #Jugendschutz-String:
-ACCESS_LIMITATION = {'de':'Freigegeben ab 18 Jahren','fr':'Déconseillé au moins de 18 ans'}
+ACCESS_LIMITATION = {'de':u'Freigegeben ab 18 Jahren','fr':u'Déconseillé au moins de 18 ans'}
 
 BOLD   = '[1m'
 NC     = '[0m'    # no color
@@ -397,7 +397,7 @@ def get_rtmp_url(url_page, quality='hd', lang='fr'):
             # second xml file
             soup = BeautifulStoneSoup(urlopen(xml_url).read())
             if ACCESS_LIMITATION[lang] in soup.find('video').find('name'): #check if video can be accessed now
-                print "This video can only be accessed between 23:00 and 5:00"
+                die("This video can only be accessed between 23:00 and 5:00")
             else:
                 # at last the video url
                 rtmp_url = soup.urls.find('url', {'quality': quality}).string
