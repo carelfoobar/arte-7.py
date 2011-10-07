@@ -30,9 +30,9 @@ from optparse import OptionParser
 from cmd import Cmd
 
 VERSION = '0.2.3.3'
-DEFAULT_LANG = 'de'
+DEFAULT_LANG = 'fr'
 QUALITY = ('sd', 'hd')
-DEFAULT_QUALITY = 'sd'
+DEFAULT_QUALITY = 'hd'
 DEFAULT_DLDIR = os.getcwd()
 # You could add your favorite player at the beginning of the PLAYERS tuple
 # It must follow the template:
@@ -361,7 +361,6 @@ def die(msg):
     print >> stderr, 'Error: %s. See %s --help' % (msg, argv[0])
     exit(1)
 
-global_objects = [] #EDIT
 def get_rtmp_url(url_page, quality='hd', lang='fr'):
     '''get the rtmp url of the video and player url and info about video and soup'''
     # inspired by the get_rtmp_url from arte7recorder project
@@ -397,7 +396,6 @@ def get_rtmp_url(url_page, quality='hd', lang='fr'):
                 xml_url = videos[lang]
             # second xml file
             soup = BeautifulStoneSoup(urlopen(xml_url).read())
-            global_objects.append(soup) #EDIT
             if ACCESS_LIMITATION[lang] in soup.find('video').find('name'): #check if video can be accessed now
                 print "This video can only be accessed between 23:00 and 5:00"
             else:
